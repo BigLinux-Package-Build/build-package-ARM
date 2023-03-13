@@ -1,0 +1,196 @@
+name: 'BigLinux Build ARM Package '
+description: 'Installs prerequisites for building Manjaro ARM on ubuntu'
+inputs:
+  branch:
+    description: 'stable (default), testing, unstable'
+    required: false
+    default: stable
+  gitbranch:
+    description: 'bigBranch to buld package'
+    required: false
+  type:
+    description: 'type: package or .img'
+    required: true
+  gpg-key:
+    descriptio: 'gpg signing key'
+    required: true
+  gpg-passphrase:
+    description: 'gpg passphrase'
+    required: true
+    
+runs:
+  using: "composite"
+  steps:
+    - name: install-build-dependencies
+      shell: bash
+      run: |
+        #Install Build Dependencies
+        sudo apt-get update
+        sudo apt install \
+          gdisk \
+          zip \
+          systemd-container \
+          bmap-tools asciidoc \
+          libarchive-tools \
+          git \
+          build-essential \
+          cmake \
+          libarchive-dev \
+          pkg-config \
+          libcurl4-openssl-dev \
+          libgpgme-dev \
+          libssl-dev \
+          fakeroot \
+          dh-autoreconf \
+          qemu-utils \
+          qemu-efi-aarch64 \
+          qemu-system-arm \
+          qemu-user-static \
+          mktorrent \
+          paperkey \
+          gpg \
+          ca-certificates \
+          u-boot-tools
+        sudo pip3 install meson
+        sudo pip3 install ninja
+        
+        # For generic-efi support
+        wget http://ports.ubuntu.com/pool/main/g/grub2-unsigned/grub-efi-arm64-bin_2.06-2ubuntu10_arm64.deb
+        sudo dpkg -x grub-efi-arm64-bin_2.06-2ubuntu10_arm64.deb /
+        
+        sudo rm -r grub-efi-arm64-bin_2.06-2ubuntu10_arm64.deb
+          
+    - id: install-pacman
+      shell: bash
+      env:
+        PACMAN_VERSION: 6.0.2
+      run: |
+        #Install Pacman
+        sudo git clone --depth 1 https://gitlab.manjaro.org/packages/core/pacman.git
+        pushd pacman
+          sudo wget https://sources.archlinux.org/other/pacman/pacman-${PACMAN_VERSION}.tar.xz
+          sudo tar -xvf pacman-${PACMAN_VERSION}.tar.xz
+          pushd pacman-${PACMAN_VERSION}
+            sudo patch -p1 -i ../pacman-sync-first-option.patch
+            sudo meson --prefix=/usr \
+                      --buildtype=plain \
+                      -Ddoc=disabled \
+                      -Ddoxygen=enabled \
+                      -Dscriptlet-shell=/usr/bin/bash \
+                      -Dldconfig=/usr/bin/ldconfig \
+                      build
+            sudo meson compile -C build
+            sudo meson install -C build
+          popd
+          sudo install -m644 pacman.conf /etc/pacman.conf
+          sudo install -m644 makepkg.conf /etc/
+          sudo mkdir -p /etc/pacman.d
+          sudo touch /etc/pacman.d/mirrorlist
+        popd
+        
+        sudo rm -r pacman
+        
+    - name: setup-qemu-binfmt
+      shell: bash
+      run: |
+        #Setup Qemu Binfmt
+        sudo wget https://gitlab.manjaro.org/packages/community/manjaro-arm-qemu-static/-/raw/master/qemu-static.conf -O /usr/lib/binfmt.d/qemu-static.conf
+        sudo service systemd-binfmt restart
+          
+    - name: install-arch-install-scripts
+      shell: bash
+      env:
+        VERSION: 24
+      run: |
+        #Install Arch Install Scripts
+        sudo wget https://github.com/archlinux/arch-install-scripts/archive/refs/tags/v${VERSION}.tar.gz -O arch-install-scripts.tar.gz
+        sudo tar -xvf arch-install-scripts.tar.gz
+        sudo make -C arch-install-scripts-${VERSION}
+        sudo make -C arch-install-scripts-${VERSION} check
+        sudo make -C arch-install-scripts-${VERSION} PREFIX=/usr install
+        
+        sudo rm arch-install-scripts.tar.gz
+        sudo rm -r arch-install-scripts-${VERSION}
+        
+    - name: install-manjaro-arm-tools
+      shell: bash
+      run: |
+        #Install Manjaro Arm Tools
+        sudo git clone https://gitlab.manjaro.org/manjaro-arm/applications/manjaro-arm-tools.git
+        install_m_a_tools() {
+            pkgname=manjaro-arm-tools
+            sudo install -dm777 /usr/share/$pkgname/lib
+            sudo install -dm777 /usr/share/$pkgname/profiles
+            sudo install -d /etc/$pkgname/
+            sudo install -dm777 /var/lib/$pkgname/{pkg,img,tmp,profiles}
+            sudo install -dm777 /var/cache/$pkgname/{pkg/pkg-cache,img}
+            sudo install -Dm755 $pkgname/lib/* /usr/share/$pkgname/lib/
+            sudo install -Dm755 $pkgname/bin/* /usr/bin/
+            sudo install -Dm755 $pkgname/lib/manjaro-arm-tools.conf /etc/manjaro-arm-tools/
+        }
+        install_m_a_tools
+          
+        sudo sed -i -e 's|1>/dev/null||g' /usr/share/manjaro-arm-tools/lib/functions.sh   
+        sudo sed -i -e 's|1> /dev/null 2>&1||g' /usr/share/manjaro-arm-tools/lib/functions.sh
+        sudo sed -i -e 's|2>/dev/null||g' /usr/share/manjaro-arm-tools/lib/functions.sh
+        
+        sudo rm -r manjaro-arm-tools
+        
+    - name: checkout-arm-package
+      shell: bash
+      env:
+        REPO: ${{ inputs.arm-package }}
+      run: |
+        #Checkout ARM Package
+        git clone ${{ github.event.client_payload.url }}
+        
+    # # Tmate ##
+    # - name: Setup TMATE Session
+    #   uses: mxschmitt/action-tmate@v3
+    #   if: "${{ inputs.type == 'package' }}"
+        
+    - id: build-package
+      shell: bash
+      run: |
+        gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
+        cd $gitfolder
+        
+        sudo buildarmpkg -p . -b ${{ inputs.branch }}
+        
+    - name: sign package
+      shell: bash -O extglob {0}
+      run: |
+        # "Assinar Pacote"
+        cat <(echo -e "${{ inputs.gpg-key }}") | gpg --batch --import &>/dev/null
+        gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
+        cd $gitfolder
+        for p in $(find $PWD -maxdepth 1 -regex '.*\.pkg\.tar\.\(xz\|zst\)'); do
+          gpg --pinentry-mode loopback --passphrase "${{ inputs.gpg-passphrase }}" --detach-sign ${p}
+        done
+        
+    - name: CheckSum
+      # if: "${{ inputs.type == 'package' }}"
+      shell: bash -O extglob {0}
+      run: |
+        # "Checksum"
+        gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
+        cd $gitfolder
+        echo '#!/bin/bash
+        for i in $(ls *.zst); do md5sum $i >> $i.md5; done
+        for i in $(ls *.sig | sed 's/.sig//'); do md5sum $i.sig >> $i.md5; done
+        exit 0' > md5.sh
+        bash md5.sh
+        
+        ls -lha
+      
+#    - id: gpg_sign
+#      shell: bash
+#      run: |
+#        if [ -z "${{ inputs.CI_GPG_SECRET }}" ]; then 
+#          echo "no gpg secret given"
+#          exit 0
+#        fi
+#        cat <(echo -e "${{ inputs.CI_GPG_SECRET }}" | base64 --decode) | gpg --batch --import
+#        shopt -s extglob
+#        gpg --pinentry-mode loopback --passphrase "${{ inputs.CI_GPG_PASSPHRASE }}" --detach-sign $(basename $FILE_PATH)
+#        echo "FILE_SIG=$(basename $FILE_PATH).sig" >> $GITHUB_ENV
