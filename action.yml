@@ -130,7 +130,7 @@ runs:
         }
         install_m_a_tools
           
-        sudo sed -i -e 's|1>/dev/null||g' /usr/share/manjaro-arm-tools/lib/functions.sh   
+        sudo sed -i -e 's|1>/dev/null||g' /usr/share/manjaro-arm-tools/lib/functions.sh
         sudo sed -i -e 's|1> /dev/null 2>&1||g' /usr/share/manjaro-arm-tools/lib/functions.sh
         sudo sed -i -e 's|2>/dev/null||g' /usr/share/manjaro-arm-tools/lib/functions.sh
         
@@ -144,26 +144,15 @@ runs:
         echo "#rootfs"
         #gh release -R BigLinux-Package-Build/build-iso-arm download $(gh release list -R BigLinux-Package-Build/build-iso-arm | grep rootfs | awk '{print $2}' | head -n1)
         
-        echo "1"
         echo ${{ github.token }} | gh auth login --with-token
-        echo "2"
         sed -i 's|wget -q --show-progress --progress=bar:force:noscroll \\||' /usr/share/manjaro-arm-tools/lib/functions.sh
-        echo "3"
         sed -i 's|https://github.com/manjaro-arm/rootfs.*||' /usr/share/manjaro-arm-tools/lib/functions.sh
-        echo "4"
         sed -i 's/-O "$ROOTFS_IMG\/Manjaro-ARM-$ARCH-latest.tar.gz".*/gh release -R BigLinux-Package-Build\/build-iso-arm download $(gh release list -R BigLinux-Package-Build\/build-iso-arm | grep rootfs | awk '"'{print $2}'"' | head -n1) -D $ROOTFS_IMG\//' /usr/share/manjaro-arm-tools/lib/functions.sh
         
-        echo "5"
-        #cat /usr/share/manjaro-arm-tools/lib/functions.sh | grep BigLinux-ARM
-        
-        echo "6"
         gh release -R BigLinux-Package-Build/build-iso-arm download $(gh release list -R BigLinux-Package-Build/build-iso-arm | grep rootfs | awk '{print $2}' | head -n1)
-        echo "7"
         cp BigLinux-ARM-aarch64-latest.tar.gz /var/lib/manjaro-arm-tools/img
         
-        echo "8"
         sed -i '/bsdtar -xpf/s/Manjaro/BigLinux/' /usr/share/manjaro-arm-tools/lib/functions.sh
-        echo "9"
         sed -i 's/Manjaro-ARM-$ARCH-latest.tar.gz/BigLinux-ARM-aarch64-latest.tar.gz/' /usr/share/manjaro-arm-tools/lib/functions.sh
         
         echo "#ParallelDownloads = 8"
@@ -175,19 +164,23 @@ runs:
         # sudo sed -i '/\[core\]/{h;s/.*/Server = https:\/\/repo.biglinux.com.br\/update-stable\/aarch64/;p;x;}' /usr/share/manjaro-arm-tools/lib/pacman.conf.aarch64
         # sudo sed -i '/\[core\]/{h;s/.*//;p;x;}' /usr/share/manjaro-arm-tools/lib/pacman.conf.aarch64
         
-        if [ "${{ inputs.gitbranch }}" = "testing" ];then
         echo '
         [biglinux-testing]
         # SigLevel = PackageRequired
         SigLevel = Optional TrustAll
         Server = https://repo.biglinux.com.br/testing/$arch' | sudo tee -a /usr/share/manjaro-arm-tools/lib/pacman.conf.aarch64
-        fi
         
         echo '
         [biglinux-stable]
         # SigLevel = PackageRequired
         SigLevel = Optional TrustAll
         Server = https://repo.biglinux.com.br/stable/aarch64' | sudo tee -a /usr/share/manjaro-arm-tools/lib/pacman.conf.aarch64
+        
+        #add git
+        sed -i 's/base-devel/base-devel git/' /usr/share/manjaro-arm-tools/lib/functions.sh
+        
+        #add repo to rootfs
+        sed -i '/mv -f $LIBDIR\/pacman.conf.$ARCH.backup $LIBDIR\/pacman.conf.$ARCH/{p;s/.*/sudo cp -a $LIBDIR\/pacman.conf.$ARCH $CHROOTDIR\/etc\/pacman.conf/;}' /usr/share/manjaro-arm-tools/lib/functions.sh
         
     - name: checkout-arm-package
       shell: bash
