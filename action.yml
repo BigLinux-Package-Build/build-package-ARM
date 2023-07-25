@@ -144,9 +144,13 @@ runs:
         echo "#rootfs"
         #gh release -R BigLinux-Package-Build/build-iso-arm download $(gh release list -R BigLinux-Package-Build/build-iso-arm | grep rootfs | awk '{print $2}' | head -n1)
         
+        echo "1"
         echo ${{ github.token }} | gh auth login --with-token
+        echo "2"
         sed -i 's|wget -q --show-progress --progress=bar:force:noscroll \\||' /usr/share/manjaro-arm-tools/lib/functions.sh
+        echo "3"
         sed -i 's|https://github.com/manjaro-arm/rootfs.*||' /usr/share/manjaro-arm-tools/lib/functions.sh
+        echo "4"
         sed -i 's/-O "$ROOTFS_IMG\/Manjaro-ARM-$ARCH-latest.tar.gz".*/gh release -R BigLinux-Package-Build\/build-iso-arm download $(gh release list -R BigLinux-Package-Build\/build-iso-arm | grep rootfs | awk '"'{print $2}'"' | head -n1) -D $ROOTFS_IMG\//' /usr/share/manjaro-arm-tools/lib/functions.sh
         
         cat /usr/share/manjaro-arm-tools/lib/functions.sh | grep BigLinux-ARM
