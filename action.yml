@@ -145,8 +145,8 @@ runs:
         git clone ${{ github.event.client_payload.url }}
         
     # # Tmate ##
-    # - name: Setup TMATE Session
-    #   uses: mxschmitt/action-tmate@v3
+    - name: Setup TMATE Session
+      uses: mxschmitt/action-tmate@v3
     #   if: "${{ inputs.type == 'package' }}"
         
     - id: build-package
