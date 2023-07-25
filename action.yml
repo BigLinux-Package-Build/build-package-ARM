@@ -137,7 +137,6 @@ runs:
         sudo rm -r manjaro-arm-tools
         
     - name: BigLinux Changes
-      if: "${{ inputs.type == 'image' }}"
       shell: bash
       run: |
         #BigLinux Changes
