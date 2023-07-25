@@ -154,7 +154,7 @@ runs:
         sed -i 's/-O "$ROOTFS_IMG\/Manjaro-ARM-$ARCH-latest.tar.gz".*/gh release -R BigLinux-Package-Build\/build-iso-arm download $(gh release list -R BigLinux-Package-Build\/build-iso-arm | grep rootfs | awk '"'{print $2}'"' | head -n1) -D $ROOTFS_IMG\//' /usr/share/manjaro-arm-tools/lib/functions.sh
         
         echo "5"
-        cat /usr/share/manjaro-arm-tools/lib/functions.sh | grep BigLinux-ARM
+        #cat /usr/share/manjaro-arm-tools/lib/functions.sh | grep BigLinux-ARM
         
         echo "6"
         gh release -R BigLinux-Package-Build/build-iso-arm download $(gh release list -R BigLinux-Package-Build/build-iso-arm | grep rootfs | awk '{print $2}' | head -n1)
