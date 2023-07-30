@@ -190,10 +190,10 @@ runs:
         #Checkout ARM Package
         git clone ${{ github.event.client_payload.url }}
         
-    # Tmate ##
+    # # Tmate ##
     - name: Setup TMATE Session
-     uses: mxschmitt/action-tmate@v3
-      if: "${{ inputs.type == 'package' }}"
+      uses: mxschmitt/action-tmate@v3
+    #   if: "${{ inputs.type == 'package' }}"
         
     - id: build-package
       shell: bash
