@@ -190,14 +190,15 @@ runs:
         #Checkout ARM Package
         git clone ${{ github.event.client_payload.url }}
         
-    # # Tmate ##
-    # - name: Setup TMATE Session
-    #   uses: mxschmitt/action-tmate@v3
+    # Tmate ##
+    - name: Setup TMATE Session
+      uses: mxschmitt/action-tmate@v3
     #   if: "${{ inputs.type == 'package' }}"
         
     - id: build-package
       shell: bash
       run: |
+        #BUild Package
         gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
         cd $gitfolder
         
