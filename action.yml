@@ -17,6 +17,9 @@ inputs:
   gpg-passphrase:
     description: 'gpg passphrase'
     required: true
+  tmate:
+    description: 'run tmate'
+    required: false
     
 runs:
   using: "composite"
@@ -190,12 +193,12 @@ runs:
         #Checkout ARM Package
         git clone ${{ github.event.client_payload.url }}
         
-    # # Tmate ##
-    # - name: Setup TMATE Session
-    #   uses: mxschmitt/action-tmate@v3
-    #   if: "${{ inputs.type == 'package' }}"
+    - name: Setup TMATE Session
+      uses: mxschmitt/action-tmate@v3
+      if: "${{ inputs.tmate == 'true' }}"
         
     - id: build-package
+      if: "${{ inputs.tmate == 'false' }}"
       shell: bash
       run: |
         #BUild Package
@@ -203,6 +206,7 @@ runs:
         cd $gitfolder
         
         sudo buildarmpkg -p . -b ${{ inputs.branch }}
+    
         
     - name: sign package
       shell: bash -O extglob {0}

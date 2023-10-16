@@ -6,6 +6,14 @@ on:
       - biglinux/*
       - AUR/*
       - xivastudio/*
+  
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'With TMATE'
+        required: false
+        default: false
 
 jobs:
   build:
@@ -38,6 +46,7 @@ jobs:
           gpg-passphrase: ${{ secrets.PASSPHRASE }}
           # extrarepo: ${{ github.event.client_payload.extrarepo }}
           type: package
+          tmate: ${{ inputs.debug_enabled }}
           
       # # Tmate ##
       # - name: Setup tmate session
