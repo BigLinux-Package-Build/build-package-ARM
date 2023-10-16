@@ -185,9 +185,6 @@ runs:
         #add repo to rootfs
         sed -i '/mv -f $LIBDIR\/pacman.conf.$ARCH.backup $LIBDIR\/pacman.conf.$ARCH/{p;s/.*/sudo cp -a $LIBDIR\/pacman.conf.$ARCH $CHROOTDIR\/etc\/pacman.conf/;}' /usr/share/manjaro-arm-tools/lib/functions.sh
         
-        echo "inputs.tmate"
-        echo "${{ inputs.tmate }}"
-        
     - name: Setup TMATE Session
       uses: mxschmitt/action-tmate@v3
       if: "${{ inputs.tmate == 'true' }}"
