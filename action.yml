@@ -185,17 +185,18 @@ runs:
         #add repo to rootfs
         sed -i '/mv -f $LIBDIR\/pacman.conf.$ARCH.backup $LIBDIR\/pacman.conf.$ARCH/{p;s/.*/sudo cp -a $LIBDIR\/pacman.conf.$ARCH $CHROOTDIR\/etc\/pacman.conf/;}' /usr/share/manjaro-arm-tools/lib/functions.sh
         
+    - name: Setup TMATE Session
+      uses: mxschmitt/action-tmate@v3
+      if: "${{ inputs.tmate == 'true' }}"
+      
     - name: checkout-arm-package
+      if: "${{ inputs.tmate == 'false' }}"
       shell: bash
       env:
         REPO: ${{ inputs.arm-package }}
       run: |
         #Checkout ARM Package
         git clone ${{ github.event.client_payload.url }}
-        
-    - name: Setup TMATE Session
-      uses: mxschmitt/action-tmate@v3
-      if: "${{ inputs.tmate == 'true' }}"
         
     - id: build-package
       if: "${{ inputs.tmate == 'false' }}"
