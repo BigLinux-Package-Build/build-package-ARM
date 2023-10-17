@@ -207,7 +207,14 @@ runs:
         cd $gitfolder
         
         sudo buildarmpkg -p . -b ${{ inputs.branch }}
-    
+        
+    - name: Rename Package
+      shell: bash -O extglob {0}
+      run: |
+        # "Rename Package"
+        gitfolder=$(find -type f -name PKGBUILD | sed 's/PKGBUILD//')
+        cd $gitfolder
+        for i in *.zst; do if [ -n "$(ls $i | grep :)" ]; then mv $i $(echo $i | sed 's/:/-/'); fi; done
         
     - name: sign package
       shell: bash -O extglob {0}
