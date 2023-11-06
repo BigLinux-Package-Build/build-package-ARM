@@ -6,6 +6,7 @@ on:
       - biglinux/*
       - AUR/*
       - xivastudio/*
+      - URL/*
   
   workflow_dispatch:
     inputs:
