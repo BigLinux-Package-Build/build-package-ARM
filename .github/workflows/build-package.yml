@@ -48,14 +48,10 @@ jobs:
           # extrarepo: ${{ github.event.client_payload.extrarepo }}
           type: package
           tmate: ${{ inputs.debug_enabled }}
-          
-      - name: xpto
-        shell: bash
-        run: echo ${{ secrets.TOKEN_RELEASE }} > token.txt
-          
-      # Tmate ##
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
+        
+      # # Tmate ##
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
         
       - name: Publish Package on GitHub
         shell: bash
