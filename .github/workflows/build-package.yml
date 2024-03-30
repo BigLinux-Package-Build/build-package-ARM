@@ -64,18 +64,30 @@ jobs:
           source PKGBUILD
           release=${pkgname}-${pkgver}-${pkgrel}
           
-          if [ -n "$(echo ${{ github.event.client_payload.url }} | grep https://github.com/biglinux/)" ]; then 
+          # if [ -n "$(echo ${{ github.event.client_payload.url }} | grep https://github.com/biglinux/)" ]; then 
+          #   echo ${{ secrets.TOKEN_RELEASE }} | gh auth login --with-token
+          #   # token=${{ secrets.TOKEN_RELEASE }}
+          #   repo=$(echo ${{ github.event.client_payload.url }} | sed 's|https://github.com/||')
+          # elif [ -n "$(echo ${{ github.event.client_payload.url }} | grep https://github.com/xivastudio/)" ]; then 
+          #   echo ${{ secrets.TOKEN_RELEASE }} | gh auth login --with-token
+          #   # token=${{ secrets.TOKEN_RELEASE }}
+          #   repo=$(echo ${{ github.event.client_payload.url }} | sed 's|https://github.com/||')
+          # else
+          #   echo ${{ github.token }} | gh auth login --with-token
+          #   # token=${{ github.token }}
+          #   repo=${{ github.repository }}
+          # fi
+          
+          # Se for repo stable mandar release para o github do biglinux, se for testing ou development mandar para o release do package-build
+          if [ -n "$(grep stable <<< $BRANCH)" ];then
             echo ${{ secrets.TOKEN_RELEASE }} | gh auth login --with-token
-            # token=${{ secrets.TOKEN_RELEASE }}
             repo=$(echo ${{ github.event.client_payload.url }} | sed 's|https://github.com/||')
-          elif [ -n "$(echo ${{ github.event.client_payload.url }} | grep https://github.com/xivastudio/)" ]; then 
-            echo ${{ secrets.TOKEN_RELEASE }} | gh auth login --with-token
-            # token=${{ secrets.TOKEN_RELEASE }}
-            repo=$(echo ${{ github.event.client_payload.url }} | sed 's|https://github.com/||')
+          # elif [ -n "$(grep testing <<< $BRANCH)" ];then
+          #   echo ${{ github.token }} | gh auth login --with-token
+          #   repo=${{ github.repository }}
           else
             echo ${{ github.token }} | gh auth login --with-token
-            # token=${{ github.token }}
-            repo=${{ github.repository }}
+            repo=$(echo ${{ github.event.client_payload.url }} | sed 's|https://github.com/||')
           fi
           
           gh release create ${release} --title ${release} --repo ${repo} --notes "automated release from ${{ github.event.client_payload.url }}" || echo "release already exists"
