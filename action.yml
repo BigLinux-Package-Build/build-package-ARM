@@ -74,7 +74,7 @@ runs:
           sudo wget https://sources.archlinux.org/other/pacman/pacman-${PACMAN_VERSION}.tar.xz
           sudo tar -xvf pacman-${PACMAN_VERSION}.tar.xz
           pushd pacman-${PACMAN_VERSION}
-            sudo patch -p1 -i ../pacman-sync-first-option.patch
+            # sudo patch -p1 -i ../pacman-sync-first-option.patch
             sudo meson --prefix=/usr \
                       --buildtype=plain \
                       -Ddoc=disabled \
@@ -160,6 +160,9 @@ runs:
         
         echo "#ParallelDownloads = 8"
         sudo sed -i '/Architecture/{p;s/.*/ParallelDownloads = 8/;}' /usr/share/manjaro-arm-tools/lib/pacman.conf.aarch64
+        
+        # Fix SyncFirst
+        sed -i '/SyncFirst/d' /etc/pacman.conf /usr/share/manjaro-arm-tools/lib/pacman.conf.aarch64
         
         echo "#add biglinux repo"
         # sudo sed -i '/\[core\]/{h;s/.*/\[biglinux-update-stable\]/;p;x;}' /usr/share/manjaro-arm-tools/lib/pacman.conf.aarch64
