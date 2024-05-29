@@ -162,7 +162,7 @@ runs:
         sudo sed -i '/Architecture/{p;s/.*/ParallelDownloads = 8/;}' /usr/share/manjaro-arm-tools/lib/pacman.conf.aarch64
         
         # Fix SyncFirst
-        sed -i '/SyncFirst/d' /etc/pacman.conf /usr/share/manjaro-arm-tools/lib/pacman.conf.aarch64
+        sudo sed -i '/SyncFirst/d' /etc/pacman.conf /usr/share/manjaro-arm-tools/lib/pacman.conf.aarch64
         
         echo "#add biglinux repo"
         # sudo sed -i '/\[core\]/{h;s/.*/\[biglinux-update-stable\]/;p;x;}' /usr/share/manjaro-arm-tools/lib/pacman.conf.aarch64
